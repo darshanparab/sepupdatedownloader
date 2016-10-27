@@ -3,20 +3,16 @@
 #include <wininet.h>
 #include <fstream>
 #include <regex>
+#include <string>
+
 using namespace std;
 
 HANDLE hFile;
 HINTERNET hINETOPEN, hINETURL;
-TCHAR uAGENT[15]="SEPDOWNLOADER",*DATA = NULL, SEPU32[23],SEPU64[23];
+TCHAR uAGENT[15]="SEPDOWNLOADER",*DATA = NULL, SEPU32[23],SEPU64[23],*URL,*FILENAME;
 DWORD ACCESSTYPE = INTERNET_OPEN_TYPE_PRECONFIG,BLOCKSIZE=1000000, RBYTES=0, BytesWrittenToDisk=0,BytesWritten;
 ifstream DOWNLOADPAGE;
 
-/*--------------------------------------- Parse index.txt ---------------------------------------*/
-int parse_index(TCHAR *INFO)
-{
-	
-}
-/*--------------------------------------- End of function ---------------------------------------*/
 
 /*--------------------------------------- Download data ---------------------------------------*/
 int download(TCHAR *URL, TCHAR *FILENAME)
@@ -49,6 +45,41 @@ int download(TCHAR *URL, TCHAR *FILENAME)
 }
 /*--------------------------------------- End of function ---------------------------------------*/
 
+
+/*--------------------------------------- Parse index.txt ---------------------------------------*/
+int parse_index(TCHAR *INFOFILE)
+{
+	string LINE;
+	TCHAR *URL, *FILENAME;
+	regex REG32("http:\\/\\/definitions\\.symantec\\.com\\/defs\\/[0-9]{8}-[0-9]{3}-v5i32\\.exe"), REG64("http:\\/\\/definitions\\.symantec\\.com\\/defs\\/[0-9]{8}-[0-9]{3}-v5i64\\.exe"), SEPU32("[0-9]{8}-[0-9]{3}-v5i32\\.exe"), SEPU64("[0-9]{8}-[0-9]{3}-v5i64\\.exe");
+	smatch URL32, URL64, FILENAME32, FILENAME64;
+	
+	ifstream INDEXFILE(INFOFILE);
+	while(getline(INDEXFILE,LINE))
+	{
+		if(regex_search(LINE,URL32,REG32))
+		{
+			cout<<URL32.str(0)<<endl;
+			if(regex_search(LINE,FILENAME32,SEPU32))
+			{
+				cout<<FILENAME32.str(0)<<endl;
+			}
+		}
+		else if(regex_search(LINE,URL64,REG64))
+		{
+			cout<<URL64.str(0)<<endl;
+			if(regex_search(LINE,FILENAME64,SEPU64)) 
+			{ 
+				cout<<FILENAME64.str(0)<<endl;
+			}
+		}
+	}
+	INDEXFILE.close();
+	return 0;
+}
+/*--------------------------------------- End of function ---------------------------------------*/
+
+
 int main(int argc, char** argv)
 {
 	TCHAR INDEX[300]="https://www.symantec.com/security_response/definitions/download/detail.jsp?gid=sep";
@@ -60,6 +91,7 @@ int main(int argc, char** argv)
 
 /*--------------------------------------- Download index file ---------------------------------------*/
 	download(INDEX,"index.txt");
+	parse_index("index.txt");
 
 /*--------------------------------------- download file and store into hFile---------------------------------------*/
 //	download(URL32,FILEPATH);
